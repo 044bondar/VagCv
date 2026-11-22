@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity">
+<head th:fragment="head(title)">
+  <meta charset="UTF-8">
+  <title th:text="${title} + ' - VAG.CV Garage'">VAG.CV Garage</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 1.5rem auto; max-width: 1000px; color: #222; }
+    nav { padding-bottom: .6rem; border-bottom: 1px solid #ccc; margin-bottom: 1rem; }
+    nav a, nav form { display: inline-block; margin-right: 1rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .9rem; }
+    th, td { border: 1px solid #ccc; padding: .35rem .5rem; text-align: left; }
+    th { background: #f2f2f2; }
+    .ok { color: #1b6e2a; } .error { color: #b00020; }
+    .status-IN_REPAIR { color: #a35c00; } .status-READY_FOR_SALE { color: #1b6e2a; } .status-SOLD { color: #555; }
+    label { display: block; margin-top: .6rem; font-weight: bold; }
+    input, select { padding: .3rem; width: 320px; }
+    .inline { display: inline; }
+  </style>
+</head>
+<body>
+<nav th:fragment="nav">
+  <strong>VAG.CV Garage</strong>
+  <a th:href="@{/}">Home</a>
+  <a th:href="@{/ui/vehicles}">Vehicles</a>
+  <a sec:authorize="hasRole('ADMIN')" th:href="@{/ui/admin/summary}">Fleet summary</a>
+  <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post">
+    <button type="submit">Logout (<span sec:authentication="name">user</span>)</button>
+  </form>
+</nav>
+</body>
+</html>

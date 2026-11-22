@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity">
+<head th:replace="~{fragments :: head('Home')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<h1>VAG.CV Fleet &amp; Garage Platform</h1>
+
+<div sec:authorize="!isAuthenticated()">
+  <p>You are not logged in.</p>
+  <p><a th:href="@{/ui/vehicles}">Log in via Keycloak and open the vehicle list</a></p>
+</div>
+
+<div sec:authorize="isAuthenticated()">
+  <p>Logged in as <b sec:authentication="name">user</b></p>
+  <p>Roles / authorities: <code sec:authentication="authorities">[]</code></p>
+  <p><a th:href="@{/ui/vehicles}">Open vehicle list</a></p>
+</div>
+</body>
+</html>

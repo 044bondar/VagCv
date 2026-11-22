@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/springsecurity">
+<head th:replace="~{fragments :: head('Vehicles')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<h1>Vehicles</h1>
+<p class="ok" th:if="${message}" th:text="${message}"></p>
+<p class="error" th:if="${error}" th:text="${error}"></p>
+<p><a th:href="@{/ui/vehicles/new}">+ Add vehicle</a></p>
+
+<table>
+  <tr>
+    <th>ID</th><th>VIN</th><th>Brand</th><th>Model</th><th>Year</th><th>Mileage, km</th>
+    <th>Purchase</th><th>Target resale</th><th>Expected profit</th><th>Status</th><th>Operator</th><th>Actions</th>
+  </tr>
+  <tr th:each="v : ${vehicles}">
+    <td th:text="${v.id}"></td>
+    <td th:text="${v.vin}"></td>
+    <td th:text="${v.brand}"></td>
+    <td th:text="${v.model}"></td>
+    <td th:text="${v.manufactureYear}"></td>
+    <td th:text="${v.mileageKm}"></td>
+    <td th:text="${v.purchasePrice}"></td>
+    <td th:text="${v.targetResalePrice}"></td>
+    <td th:text="${v.expectedProfit}"></td>
+    <td th:text="${v.status}" th:class="${'status-' + v.status}"></td>
+    <td th:text="${v.createdBy}"></td>
+    <td>
+      <a th:href="@{/ui/vehicles/{id}/edit(id=${v.id})}">Edit</a>
+      <form class="inline" th:action="@{/ui/vehicles/{id}/ready-for-sale(id=${v.id})}" method="post">
+        <button type="submit">Ready for sale</button>
+      </form>
+      <!-- Кнопку бачить лише ADMIN; але захист - це @PreAuthorize у сервісі, а не прихована кнопка -->
+      <form class="inline" sec:authorize="hasRole('ADMIN')"
+            th:action="@{/ui/vehicles/{id}/delete(id=${v.id})}" method="post">
+        <button type="submit">Delete</button>
+      </form>
+    </td>
+  </tr>
+</table>
+</body>
+</html>

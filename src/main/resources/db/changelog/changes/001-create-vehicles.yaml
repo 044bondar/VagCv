@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-vehicles
+      author: vagcv
+      changes:
+        - createTable:
+            tableName: vehicles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: vin
+                  type: VARCHAR(17)
+                  constraints: { nullable: false, unique: true, uniqueConstraintName: uk_vehicles_vin }
+              - column: { name: brand, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: model, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: manufacture_year, type: INT, constraints: { nullable: false } }
+              - column: { name: mileage_km, type: INT, constraints: { nullable: false } }
+              - column: { name: purchase_price, type: "NUMERIC(12,2)", constraints: { nullable: false } }
+              - column: { name: target_resale_price, type: "NUMERIC(12,2)", constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }

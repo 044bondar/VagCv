@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Vehicle')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<h1 th:text="${title}">Vehicle</h1>
+
+<form th:action="@{${action}}" th:object="${vehicle}" method="post">
+  <div class="error" th:if="${#fields.hasErrors('*')}">
+    <p th:each="e : ${#fields.allErrors()}" th:text="${e}"></p>
+  </div>
+
+  <label>VIN (17 characters)</label><input th:field="*{vin}">
+  <label>Brand</label><input th:field="*{brand}">
+  <label>Model</label><input th:field="*{model}">
+  <label>Manufacture year</label><input th:field="*{manufactureYear}" type="number">
+  <label>Mileage, km</label><input th:field="*{mileageKm}" type="number">
+  <label>Purchase price</label><input th:field="*{purchasePrice}">
+  <label>Target resale price</label><input th:field="*{targetResalePrice}">
+
+  <p><button type="submit">Save</button> <a th:href="@{/ui/vehicles}">Cancel</a></p>
+</form>
+</body>
+</html>

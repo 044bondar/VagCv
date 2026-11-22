@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Fleet summary')}"></head>
+<body>
+<nav th:replace="~{fragments :: nav}"></nav>
+<h1>Fleet summary (ADMIN only)</h1>
+<p>Total vehicles: <b th:text="${summary.totalVehicles}">0</b></p>
+<p>Total expected profit: <b th:text="${summary.totalExpectedProfit}">0</b></p>
+<table>
+  <tr><th>Status</th><th>Count</th></tr>
+  <tr th:each="entry : ${summary.byStatus}"><td th:text="${entry.key}"></td><td th:text="${entry.value}"></td></tr>
+</table>
+<p>Ця сторінка захищена правилом <code>/ui/admin/**</code> &rarr; <code>hasRole('ADMIN')</code> у SecurityFilterChain.</p>
+</body>
+</html>

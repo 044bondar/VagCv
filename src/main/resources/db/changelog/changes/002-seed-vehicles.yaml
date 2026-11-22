@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-seed-vehicles
+      author: vagcv
+      changes:
+        - insert:
+            tableName: vehicles
+            columns:
+              - column: { name: vin, value: "WVWZZZ1KZAW123456" }
+              - column: { name: brand, value: "Volkswagen" }
+              - column: { name: model, value: "Golf" }
+              - column: { name: manufacture_year, valueNumeric: 2012 }
+              - column: { name: mileage_km, valueNumeric: 185000 }
+              - column: { name: purchase_price, valueNumeric: 5200.00 }
+              - column: { name: target_resale_price, valueNumeric: 6900.00 }
+              - column: { name: status, value: "IN_REPAIR" }
+              - column: { name: created_by, value: "system" }
+              - column: { name: updated_at, valueComputed: "NOW()" }
+        - insert:
+            tableName: vehicles
+            columns:
+              - column: { name: vin, value: "WAUZZZ8K9BA654321" }
+              - column: { name: brand, value: "Audi" }
+              - column: { name: model, value: "A4" }
+              - column: { name: manufacture_year, valueNumeric: 2011 }
+              - column: { name: mileage_km, valueNumeric: 210000 }
+              - column: { name: purchase_price, valueNumeric: 6100.00 }
+              - column: { name: target_resale_price, valueNumeric: 7800.00 }
+              - column: { name: status, value: "READY_FOR_SALE" }
+              - column: { name: created_by, value: "system" }
+              - column: { name: updated_at, valueComputed: "NOW()" }
+        - insert:
+            tableName: vehicles
+            columns:
+              - column: { name: vin, value: "TMBJJ7NE0H0112233" }
+              - column: { name: brand, value: "Skoda" }
+              - column: { name: model, value: "Octavia" }
+              - column: { name: manufacture_year, valueNumeric: 2017 }
+              - column: { name: mileage_km, valueNumeric: 120000 }
+              - column: { name: purchase_price, valueNumeric: 8400.00 }
+              - column: { name: target_resale_price, valueNumeric: 10300.00 }
+              - column: { name: status, value: "SOLD" }
+              - column: { name: created_by, value: "system" }
+              - column: { name: updated_at, valueComputed: "NOW()" }

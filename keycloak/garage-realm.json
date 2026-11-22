@@ -1,0 +1,71 @@
+{
+  "realm": "garage-realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "roles": {
+    "realm": [
+      { "name": "ADMIN", "description": "Garage administrator" },
+      { "name": "MECHANIC", "description": "Garage mechanic" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "garage-ui",
+      "name": "Garage web UI (OIDC)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "garage-ui-secret",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["http://localhost:8080/*"],
+      "webOrigins": ["http://localhost:8080"],
+      "attributes": { "post.logout.redirect.uris": "http://localhost:8080/*" },
+      "protocolMappers": [
+        {
+          "name": "realm-roles-flat",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true", "claim.name": "roles", "jsonType.label": "String",
+            "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "garage-postman",
+      "name": "Postman / curl (JWT, password grant - тільки для лабораторної)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "realm-roles-flat",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "multivalued": "true", "claim.name": "roles", "jsonType.label": "String",
+            "id.token.claim": "true", "access.token.claim": "true", "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin_user", "enabled": true, "email": "admin_user@vagcv.local", "emailVerified": true,
+      "firstName": "Admin", "lastName": "Garage",
+      "credentials": [ { "type": "password", "value": "admin123", "temporary": false } ],
+      "realmRoles": ["ADMIN"]
+    },
+    {
+      "username": "mechanic_user", "enabled": true, "email": "mechanic_user@vagcv.local", "emailVerified": true,
+      "firstName": "Mechanic", "lastName": "Garage",
+      "credentials": [ { "type": "password", "value": "mechanic123", "temporary": false } ],
+      "realmRoles": ["MECHANIC"]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-quartz-schema
+      author: vagcv
+      comment: "Таблиці QRTZ_* для Quartz JDBC job store (PostgreSQL)"
+      changes:
+        - sqlFile:
+            path: db/changelog/sql/quartz-postgres.sql
+            relativeToChangelogFile: false
+            splitStatements: true
+            endDelimiter: ";"
+            stripComments: true
+      rollback:
+        - sql:
+            sql: >
+              DROP TABLE IF EXISTS qrtz_locks, qrtz_scheduler_state, qrtz_fired_triggers,
+              qrtz_paused_trigger_grps, qrtz_calendars, qrtz_blob_triggers, qrtz_simprop_triggers,
+              qrtz_cron_triggers, qrtz_simple_triggers, qrtz_triggers, qrtz_job_details CASCADE

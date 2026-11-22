@@ -1,0 +1,451 @@
+{
+  "info": {
+    "name": "VAG.CV Garage - Lab 6 (Quartz)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run order: folder 0 (tokens), then folder 6 top to bottom. Requests marked \"see log\" must be checked in the IntelliJ Run console."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8180"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "mechanicToken",
+      "value": ""
+    },
+    {
+      "key": "vehicleId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Tokens (Keycloak)",
+      "item": [
+        {
+          "name": "Token: admin_user (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('token received', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('adminToken', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{keycloakUrl}}/realms/garage-realm/protocol/openid-connect/token",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "garage-postman"
+                },
+                {
+                  "key": "username",
+                  "value": "admin_user"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Token: mechanic_user (MECHANIC)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('token received', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('mechanicToken', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{keycloakUrl}}/realms/garage-realm/protocol/openid-connect/token",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "garage-postman"
+                },
+                {
+                  "key": "username",
+                  "value": "mechanic_user"
+                },
+                {
+                  "key": "password",
+                  "value": "mechanic123"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Quartz (Lab 6)",
+      "item": [
+        {
+          "name": "GET scheduler/jobs as admin -> 200 (2 jobs, 3 triggers)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test('2 jobs', () => pm.expect(j.length).to.eql(2));",
+                  "const stale = j.find(x => x.name === 'stale-repair-reminder');",
+                  "pm.test('stale job has 2 triggers', () => pm.expect(stale.triggers.length).to.eql(2));",
+                  "pm.test('timezone Europe/Kyiv', () => pm.expect(stale.triggers[0].timeZone).to.eql('Europe/Kyiv'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET scheduler/jobs as mechanic -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET scheduler/jobs WITHOUT token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs",
+            "header": []
+          }
+        },
+        {
+          "name": "RUN stale-repair-reminder (staleDays=0) -> 202",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-maintenance/stale-repair-reminder/run?staleDays=0",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN stale-repair-reminder AGAIN (idempotent) -> 202",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-maintenance/stale-repair-reminder/run?staleDays=0",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET reminders (no duplicates) -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const keys = r.map(x => x.vehicleId + '|' + x.reminderDate);",
+                  "pm.test('no duplicate (vehicle, day)', () => pm.expect(new Set(keys).size).to.eql(keys.length));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/reminders",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN fleet-snapshot -> 202",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-reporting/fleet-snapshot/run",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN fleet-snapshot AGAIN (idempotent) -> 202",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-reporting/fleet-snapshot/run",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET snapshots (one per day) -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "const days = s.map(x => x.snapshotDate);",
+                  "pm.test('one snapshot per day', () => pm.expect(new Set(days).size).to.eql(days.length));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/snapshots",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN stale-repair-reminder simulateFailure=true -> 202 (see log: 3 attempts)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-maintenance/stale-repair-reminder/run?simulateFailure=true",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN stale-repair-reminder staleDays=-1 -> 202 (job logs config error, no retry)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 202', () => pm.response.to.have.status(202));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-maintenance/stale-repair-reminder/run?staleDays=-1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN unknown job -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/nope/nothing/run",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "RUN as mechanic -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/admin/scheduler/jobs/garage-reporting/fleet-snapshot/run",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,584 @@
+{
+  "info": {
+    "name": "VAG.CV Garage - Lab 1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Run order: folder 0 first (tokens), then the rest top to bottom (Collection Runner)."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8180"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "mechanicToken",
+      "value": ""
+    },
+    {
+      "key": "vehicleId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Tokens (Keycloak)",
+      "item": [
+        {
+          "name": "Token: admin_user (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('token received', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('adminToken', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{keycloakUrl}}/realms/garage-realm/protocol/openid-connect/token",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "garage-postman"
+                },
+                {
+                  "key": "username",
+                  "value": "admin_user"
+                },
+                {
+                  "key": "password",
+                  "value": "admin123"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Token: mechanic_user (MECHANIC)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('token received', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('mechanicToken', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{keycloakUrl}}/realms/garage-realm/protocol/openid-connect/token",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "password"
+                },
+                {
+                  "key": "client_id",
+                  "value": "garage-postman"
+                },
+                {
+                  "key": "username",
+                  "value": "mechanic_user"
+                },
+                {
+                  "key": "password",
+                  "value": "mechanic123"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. JWT authentication (AC5)",
+      "item": [
+        {
+          "name": "GET /api/vehicles WITHOUT token -> 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vehicles",
+            "header": []
+          }
+        },
+        {
+          "name": "GET /api/me as admin_user -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /api/me as mechanic_user -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. CRUD (AC1)",
+      "item": [
+        {
+          "name": "Create vehicle -> 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('vehicleId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vehicles",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"WVWZZZ3CZ9E123456\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Passat\",\n  \"manufactureYear\": 2014,\n  \"mileageKm\": 160000,\n  \"purchasePrice\": 7000.0,\n  \"targetResalePrice\": 8900.0\n}"
+            }
+          }
+        },
+        {
+          "name": "Create duplicate VIN -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vehicles",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"WVWZZZ3CZ9E123456\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Passat\",\n  \"manufactureYear\": 2014,\n  \"mileageKm\": 160000,\n  \"purchasePrice\": 7000.0,\n  \"targetResalePrice\": 8900.0\n}"
+            }
+          }
+        },
+        {
+          "name": "Create invalid data -> 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vehicles",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"SHORT\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Passat\",\n  \"manufactureYear\": 2014,\n  \"mileageKm\": 160000,\n  \"purchasePrice\": -5,\n  \"targetResalePrice\": 8900.0\n}"
+            }
+          }
+        },
+        {
+          "name": "List vehicles -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vehicles",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get vehicle by id -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Update vehicle -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vin\": \"WVWZZZ3CZ9E123456\",\n  \"brand\": \"Volkswagen\",\n  \"model\": \"Passat\",\n  \"manufactureYear\": 2014,\n  \"mileageKm\": 161500,\n  \"purchasePrice\": 7000.0,\n  \"targetResalePrice\": 9100.0\n}"
+            }
+          }
+        },
+        {
+          "name": "Mark ready for sale -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}/ready-for-sale",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mark SOLD seed car (id=3) ready again -> 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 409', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/vehicles/3/ready-for-sale",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get unknown id -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vehicles/99999",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. SecurityFilterChain rule (AC6)",
+      "item": [
+        {
+          "name": "GET /api/admin/summary as MECHANIC -> 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/summary",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET /api/admin/summary as ADMIN -> 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/summary",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. @PreAuthorize (AC7)",
+      "item": [
+        {
+          "name": "DELETE vehicle as MECHANIC -> 403 (blocked by @PreAuthorize)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{mechanicToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "DELETE vehicle as ADMIN -> 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "GET deleted vehicle -> 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/vehicles/{{vehicleId}}",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
